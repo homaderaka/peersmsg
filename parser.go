@@ -8,6 +8,7 @@ import (
 
 type Parser interface {
 	NextMessage(r io.Reader) (Message, error)
+	FromString(s string) (Message, error)
 	SetValidator(validator func(Message) error)
 	SetLogger(logger func(...interface{}))
 }
@@ -39,6 +40,17 @@ func (p *ParserRaw) NextMessage(r io.Reader) (m Message, err error) {
 	}
 
 	return
+}
+
+func (p *ParserRaw) FromString(s string) (Message, error) {
+	m := &MessageRaw{Data: []byte(s)}
+	if p.validator != nil {
+		if err := p.validator(m); err != nil {
+			p.logger("validation error:", err)
+			return nil, err
+		}
+	}
+	return m, nil
 }
 
 func (p *ParserRaw) SetValidator(validator func(Message) error) {
